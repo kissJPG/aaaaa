@@ -88,10 +88,11 @@ class _CodeEditorState extends State<CodeEditor> {
       ),
     );
 
+    // 同步更新 EditorState，防止 build() 时文本被覆盖
+    context.read<EditorState>().setText(_textController.text);
     setState(() {
       _showCompletion = false;
     });
-    context.read<EditorState>().markModified();
   }
 
   @override
@@ -160,27 +161,34 @@ class _CodeEditorState extends State<CodeEditor> {
             ),
           ],
         ),
-        // 透明 TextField 用于接收输入
+        // TextField 用于接收输入 — 透明文本但保留可见光标
         Positioned.fill(
-          child: Opacity(
-            opacity: 0.0,
-            child: TextField(
-              controller: _textController,
-              focusNode: _focusNode,
-              maxLines: null,
-              expands: true,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              style: TextStyle(
-                fontSize: state.fontSize,
-                fontFamily: 'monospace',
-              ),
-              onChanged: (text) {
-                context.read<EditorState>().setText(text);
-                final cursorPos = _textController.selection.baseOffset;
-                _updateCompletions(text, cursorPos);
-              },
+          child: TextField(
+            controller: _textController,
+            focusNode: _focusNode,
+            maxLines: null,
+            expands: true,
+            keyboardType: TextInputType.multiline,
+            textInputAction: TextInputAction.newline,
+            cursorColor: isDark ? const Color(0xFF569CD6) : const Color(0xFF0000FF),
+            cursorWidth: 2.0,
+            cursorHeight: state.fontSize * 1.3,
+            style: TextStyle(
+              fontSize: state.fontSize,
+              fontFamily: 'monospace',
+              color: Colors.transparent,
+              height: 1.5,
             ),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              isDense: true,
+            ),
+            onChanged: (text) {
+              context.read<EditorState>().setText(text);
+              final cursorPos = _textController.selection.baseOffset;
+              _updateCompletions(text, cursorPos);
+            },
           ),
         ),
         // 补全弹窗（位于底部）

@@ -194,7 +194,7 @@ class EditorScreen extends StatelessWidget {
             final fileName = state.openedFilePath != null
                 ? state.openedFilePath!.split('/').last
                 : '未命名';
-            final modified = state.isModified ? ' ●' : '';
+            final modified = state.isModified ? ' •' : '';
             return Text('$fileName$modified');
           },
         ),

@@ -38,12 +38,12 @@ class EditorState extends ChangeNotifier {
         name.endsWith('.ts') || name.endsWith('.tsx') ||
         name.endsWith('.mjs')) return 'javascript';
     if (name.endsWith('.java')) return 'java';
-    if (name.endsWith('.c') || name.endsWith('.cpp') ||
-        name.endsWith('.h') || name.endsWith('.hpp') ||
-        name.endsWith('.cc') || name.endsWith('.cxx') ||
-        name.endsWith('.cs')) return 'java';
+    if (name.endsWith('.c') || name.endsWith('.h')) return 'c';
+    if (name.endsWith('.cpp') || name.endsWith('.hpp') ||
+        name.endsWith('.cc') || name.endsWith('.cxx')) return 'cpp';
+    if (name.endsWith('.cs')) return 'csharp';
     if (name.endsWith('.dart')) return 'dart';
-    if (name.endsWith('.go')) return 'java';
+    if (name.endsWith('.go')) return 'go';
     if (name.endsWith('.rs')) return 'rust';
     if (name.endsWith('.rb')) return 'ruby';
     if (name.endsWith('.kt') || name.endsWith('.kts')) return 'kotlin';

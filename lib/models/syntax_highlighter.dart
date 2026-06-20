@@ -1,0 +1,265 @@
+import 'package:flutter/material.dart';
+
+/// 分词后的 Token 类型
+enum TokenType {
+  keyword,
+  string,
+  comment,
+  number,
+  punctuation,
+  operator,
+  builtin,
+  decorator,
+  type,
+  normal,
+}
+
+class Token {
+  final TokenType type;
+  final String text;
+  Token(this.type, this.text);
+}
+
+/// 语法高亮引擎 —— 支持 Python / JavaScript / Java / Dart / Kotlin / Rust 等
+class SyntaxHighlighterEngine {
+  /// 各语言关键字表
+  static final Map<String, List<String>> keywords = {
+    'python': const [
+      'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
+      'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except',
+      'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is',
+      'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return',
+      'try', 'while', 'with', 'yield',
+    ],
+    'javascript': const [
+      'async', 'await', 'break', 'case', 'catch', 'class', 'const',
+      'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export',
+      'extends', 'false', 'finally', 'for', 'function', 'if', 'import',
+      'in', 'instanceof', 'let', 'new', '', 'of', 'return', 'super',
+      'switch', 'this', 'throw', 'true', 'try', 'typeof', 'var', 'void',
+      'while', 'with', 'yield', 'undefined', 'static', 'get', 'set',
+    ],
+    'java': const [
+      'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch',
+      'char', 'class', 'const', 'continue', 'default', 'do', 'double',
+      'else', 'enum', 'extends', 'false', 'final', 'finally', 'float',
+      'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int',
+      'interface', 'long', 'native', 'new', '', 'package', 'private',
+      'protected', 'public', 'return', 'short', 'static', 'strictfp',
+      'super', 'switch', 'synchronized', 'this', 'throw', 'throws',
+      'transient', 'true', 'try', 'void', 'volatile', 'while',
+    ],
+    'dart': const [
+      'abstract', 'as', 'assert', 'async', 'await', 'break', 'case',
+      'catch', 'class', 'const', 'continue', 'covariant', 'default',
+      'deferred', 'do', 'dynamic', 'else', 'enum', 'export', 'extends',
+      'extension', 'external', 'factory', 'false', 'final', 'finally',
+      'for', 'Function', 'get', 'hide', 'if', 'implements', 'import',
+      'in', 'interface', 'is', 'late', 'library', 'mixin', 'new', '',
+      'on', 'operator', 'part', 'required', 'rethrow', 'return', 'set',
+      'show', 'static', 'super', 'switch', 'sync', 'this', 'throw',
+      'true', 'try', 'typedef', 'var', 'void', 'while', 'with', 'yield',
+    ],
+    'rust': const [
+      'as', 'break', 'const', 'continue', 'crate', 'else', 'enum',
+      'extern', 'false', 'fn', 'for', 'if', 'impl', 'in', 'let',
+      'loop', 'match', 'mod', 'move', 'mut', 'pub', 'ref', 'return',
+      'self', 'Self', 'static', 'struct', 'super', 'trait', 'true',
+      'type', 'unsafe', 'use', 'where', 'while', 'async', 'await',
+      'dyn',
+    ],
+    'ruby': const [
+      'BEGIN', 'END', 'alias', 'and', 'begin', 'break', 'case', 'class',
+      'def', 'defined', 'do', 'else', 'elsif', 'end', 'ensure', 'false',
+      'for', 'if', 'in', 'module', 'next', 'nil', 'not', 'or', 'redo',
+      'rescue', 'retry', 'return', 'self', 'super', 'then', 'true',
+      'undef', 'unless', 'until', 'when', 'while', 'yield',
+    ],
+    'kotlin': const [
+      'abstract', 'actual', 'annotation', 'as', 'break', 'by', 'catch',
+      'class', 'companion', 'const', 'constructor', 'continue', 'crossinline',
+      'data', 'delegate', 'do', 'dynamic', 'else', 'enum', 'expect',
+      'external', 'false', 'field', 'file', 'final', 'finally', 'for',
+      'fun', 'get', 'if', 'import', 'in', 'infix', 'init', 'inline',
+      'inner', 'interface', 'internal', 'is', 'it', 'lateinit', 'noinline',
+      '', 'object', 'open', 'operator', 'out', 'override', 'package',
+      'param', 'private', 'property', 'protected', 'public', 'receiver',
+      'reified', 'return', 'sealed', 'set', 'setparam', 'super', 'suspend',
+      'tailrec', 'this', 'throw', 'true', 'try', 'typealias', 'typeof',
+      'val', 'var', 'vararg', 'when', 'while',
+    ],
+    'swift': const [
+      'as', 'associatedtype', 'break', 'case', 'catch', 'class', 'continue',
+      'default', 'defer', 'deinit', 'do', 'else', 'enum', 'extension',
+      'fallthrough', 'false', 'fileprivate', 'for', 'func', 'guard', 'if',
+      'import', 'in', 'init', 'inout', 'internal', 'is', 'let', 'nil',
+      'open', 'operator', 'private', 'protocol', 'public', 'repeat',
+      'return', 'Self', 'self', 'static', 'struct', 'subscript', 'super',
+      'switch', 'throw', 'throws', 'true', 'try', 'typealias', 'var',
+      'where', 'while',
+    ],
+  };
+
+  /// 各语言内置函数/类
+  static final Map<String, List<String>> builtins = {
+    'python': const [
+      'print', 'len', 'range', 'int', 'str', 'float', 'list', 'dict',
+      'set', 'tuple', 'type', 'open', 'input', 'map', 'filter', 'zip',
+      'enumerate', 'sorted', 'reversed', 'abs', 'max', 'min', 'sum',
+      'any', 'all', 'isinstance', 'hasattr', 'getattr', 'setattr',
+      '__init__', '__str__', '__repr__', '__name__', '__main__',
+      'Exception', 'ValueError', 'TypeError', 'KeyError',
+      'super', 'bytes', 'bool', 'chr', 'ord', 'hex', 'oct', 'bin',
+      'round', 'pow', 'divmod', 'id', 'dir', 'help', 'vars',
+    ],
+    'javascript': const [
+      'console', 'Math', 'JSON', 'Array', 'Object', 'String', 'Number',
+      'Boolean', 'Date', 'RegExp', 'Set', 'Map', 'Promise', 'setTimeout',
+      'setInterval', 'parseInt', 'parseFloat', 'isNaN', 'isFinite',
+      'decodeURI', 'encodeURI', 'document', 'window', 'Error',
+      'Symbol', 'Proxy', 'Reflect', 'Intl', 'BigInt', 'undefined',
+      'fetch', 'require', 'module', 'exports',
+    ],
+    'java': const [
+      'System', 'String', 'Integer', 'Double', 'Boolean', 'Character',
+      'Byte', 'Short', 'Long', 'Float', 'Object', 'Class', 'Thread',
+      'Runnable', 'ArrayList', 'HashMap', 'HashSet', 'LinkedList',
+      'List', 'Map', 'Set', 'Collection', 'Iterator', 'Arrays',
+      'Collections', 'Math', 'Scanner', 'StringBuilder', 'StringBuffer',
+      'Exception', 'RuntimeException', 'IOException',
+    ],
+    'dart': const [
+      'print', 'String', 'int', 'double', 'bool', 'List', 'Map', 'Set',
+      'Object', 'Iterable', 'Future', 'Stream', 'void', 'Null', 'num',
+      'DateTime', 'Duration', 'RegExp', 'Stopwatch', 'Timer',
+      'Element', 'Widget', 'BuildContext', 'StatelessWidget',
+      'StatefulWidget', 'State', 'Scaffold', 'Text', 'Container',
+    ],
+    'rust': const [
+      'println', 'print', 'format', 'String', 'Vec', 'Option', 'Result',
+      'Some', 'None', 'Ok', 'Err', 'Box', 'Rc', 'Arc', 'Cell',
+      'RefCell', 'HashMap', 'BTreeMap', 'HashSet', 'BTreeSet',
+      'i8', 'i16', 'i32', 'i64', 'u8', 'u16', 'u32', 'u64',
+      'f32', 'f64', 'usize', 'isize', 'bool', 'char', 'str',
+      'assert', 'assert_eq', 'panic', 'unreachable', 'todo',
+      'dbg', 'clone', 'copy', 'drop', 'default',
+    ],
+    'ruby': const [
+      'puts', 'print', 'gets', 'p', 'pp', 'lambda', 'proc',
+      'Array', 'Hash', 'String', 'Integer', 'Float', 'Symbol',
+      'Enumerable', 'Enumerator', 'File', 'Dir', 'IO',
+      'raise', 'rescue', 'require', 'include', 'extend',
+      'attr_accessor', 'attr_reader', 'attr_writer',
+    ],
+    'kotlin': const [
+      'println', 'print', 'readLine', 'listOf', 'mutableListOf',
+      'setOf', 'mutableSetOf', 'mapOf', 'mutableMapOf',
+      'arrayOf', 'String', 'Int', 'Long', 'Double', 'Boolean',
+      'List', 'MutableList', 'Set', 'MutableSet', 'Map', 'MutableMap',
+      'run', 'let', 'also', 'apply', 'with', 'takeIf', 'takeUnless',
+    ],
+    'swift': const [
+      'print', 'String', 'Int', 'Double', 'Bool', 'Array', 'Dictionary',
+      'Set', 'Optional', 'URL', 'Data', 'Date', 'Timer',
+      'NotificationCenter', 'UserDefaults', 'FileManager',
+      'UIView', 'UIViewController', 'UILabel', 'UIButton',
+    ],
+  };
+
+  /// 将通用语言名映射到有定义的关键词表（公开方法）
+  static String mapLanguage(String language) {
+    if (keywords.containsKey(language)) return language;
+    return 'python';
+  }
+
+  /// 对一行代码进行词法分析，返回 Token 列表
+  static List<Token> tokenizeLine(String line, String language) {
+    final actualLang = mapLanguage(language);
+    final kwSet = Set<String>.from(keywords[actualLang] ?? keywords['python']!);
+    final builtinSet = Set<String>.from(
+        builtins[actualLang] ?? builtins['python']!);
+
+    final tokens = <Token>[];
+
+    final regex = RegExp(
+      r'''([a-zA-Z_]\w*)|('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)|(#.*$|//.*$)|(/\*[\s\S]*?\*/)|(\b\d+\.?\d*(?:[eE][+-]?\d+)?\b)|([{}()\[\];:.,<>=!+\-*/%&|^~?@#])|(\s+)''',
+    );
+
+    int lastEnd = 0;
+    for (final match in regex.allMatches(line)) {
+      if (match.start > lastEnd) {
+        tokens.add(Token(TokenType.normal, line.substring(lastEnd, match.start)));
+      }
+      lastEnd = match.end;
+
+      final text = match.group(0)!;
+
+      if (match.group(1) != null) {
+        // 标识符
+        if (kwSet.contains(text)) {
+          tokens.add(Token(TokenType.keyword, text));
+        } else if (builtinSet.contains(text)) {
+          tokens.add(Token(TokenType.builtin, text));
+        } else if (text.startsWith('__') && text.endsWith('__')) {
+          tokens.add(Token(TokenType.builtin, text));
+        } else if (text.isNotEmpty && text[0] == text[0].toUpperCase() && text.length > 1) {
+          tokens.add(Token(TokenType.type, text));
+        } else {
+          tokens.add(Token(TokenType.normal, text));
+        }
+      } else if (match.group(2) != null) {
+        tokens.add(Token(TokenType.string, text));
+      } else if (match.group(3) != null || match.group(4) != null) {
+        tokens.add(Token(TokenType.comment, text));
+      } else if (match.group(5) != null) {
+        tokens.add(Token(TokenType.number, text));
+      } else if (match.group(6) != null) {
+        if ('=<>!+-*/%&|^~?'.contains(text[0])) {
+          tokens.add(Token(TokenType.operator, text));
+        } else if (text == '@') {
+          tokens.add(Token(TokenType.decorator, text));
+        } else {
+          tokens.add(Token(TokenType.punctuation, text));
+        }
+      } else if (match.group(7) != null) {
+        tokens.add(Token(TokenType.normal, text));
+      }
+    }
+    if (lastEnd < line.length) {
+      tokens.add(Token(TokenType.normal, line.substring(lastEnd)));
+    }
+    return tokens;
+  }
+
+  /// 根据 Token 类型返回颜色
+  static Color colorForToken(TokenType type, {required bool isDark}) {
+    final light = isDark ? _darkColors : _lightColors;
+    return light[type] ?? (isDark ? const Color(0xFFD4D4D4) : Colors.black);
+  }
+
+  static const Map<TokenType, Color> _lightColors = {
+    TokenType.keyword: Color(0xFF0000FF),
+    TokenType.string: Color(0xFF008000),
+    TokenType.comment: Color(0xFF808080),
+    TokenType.number: Color(0xFF098658),
+    TokenType.builtin: Color(0xFF795E26),
+    TokenType.type: Color(0xFF267F99),
+    TokenType.operator: Color(0xFF000000),
+    TokenType.punctuation: Color(0xFF000000),
+    TokenType.decorator: Color(0xFFAF00DB),
+    TokenType.normal: Color(0xFF000000),
+  };
+
+  static const Map<TokenType, Color> _darkColors = {
+    TokenType.keyword: Color(0xFF569CD6),
+    TokenType.string: Color(0xFFCE9178),
+    TokenType.comment: Color(0xFF6A9955),
+    TokenType.number: Color(0xFFB5CEA8),
+    TokenType.builtin: Color(0xFFDCDCAA),
+    TokenType.type: Color(0xFF4EC9B0),
+    TokenType.operator: Color(0xFFD4D4D4),
+    TokenType.punctuation: Color(0xFFD4D4D4),
+    TokenType.decorator: Color(0xFFC586C0),
+    TokenType.normal: Color(0xFFD4D4D4),
+  };
+}

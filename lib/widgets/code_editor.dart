@@ -215,7 +215,7 @@ class _CodeEditorState extends State<CodeEditor> {
       final tokens = engine.tokenize(lines[i], language);
       for (final token in tokens) {
         spans.add(TextSpan(
-          text: token.lexeme,
+          text: token.text,
           style: TextStyle(
             color: engine.tokenColor(token, isDark),
           ),

@@ -219,19 +219,10 @@ class CodeCompletionEngine {
         results.add(CompletionItem('<!DOCTYPE>', 'snippet', '<!DOCTYPE html>'));
       }
       if ('<h'.startsWith(prefixLower)) {
-        results.add(CompletionItem('<html>', 'snippet', '<html>
-<head>
-    <title></title>
-</head>
-<body>
-    
-</body>
-</html>'));
+        results.add(CompletionItem('<html>', 'snippet', '<html>\n<head>\n    <title></title>\n</head>\n<body>\n    \n</body>\n</html>'));
       }
       if ('<d'.startsWith(prefixLower)) {
-        results.add(CompletionItem('<div>', 'snippet', '<div class="">
-    
-</div>'));
+        results.add(CompletionItem('<div>', 'snippet', '<div class=\"\">\n    \n</div>'));
       }
       if ('<s'.startsWith(prefixLower) && !'<script'.startsWith(prefixLower)) {
         results.add(CompletionItem('<span>', 'snippet', '<span></span>'));
@@ -246,14 +237,10 @@ class CodeCompletionEngine {
         results.add(CompletionItem('<img>', 'snippet', '<img src="" alt="" />'));
       }
       if ('<ul'.startsWith(prefixLower)) {
-        results.add(CompletionItem('<ul>', 'snippet', '<ul>
-    <li></li>
-</ul>'));
+        results.add(CompletionItem('<ul>', 'snippet', '<ul>\n    <li></li>\n</ul>'));
       }
       if ('<fo'.startsWith(prefixLower)) {
-        results.add(CompletionItem('<form>', 'snippet', '<form action="" method="">
-    
-</form>'));
+        results.add(CompletionItem('<form>', 'snippet', '<form action=\"\" method=\"\">\n    \n</form>'));
       }
       if ('<in'.startsWith(prefixLower)) {
         results.add(CompletionItem('<input>', 'snippet', '<input type="" />'));
@@ -262,11 +249,7 @@ class CodeCompletionEngine {
         results.add(CompletionItem('<button>', 'snippet', '<button></button>'));
       }
       if ('<tab'.startsWith(prefixLower)) {
-        results.add(CompletionItem('<table>', 'snippet', '<table>
-    <tr>
-        <td></td>
-    </tr>
-</table>'));
+        results.add(CompletionItem('<table>', 'snippet', '<table>\n    <tr>\n        <td></td>\n    </tr>\n</table>'));
       }
     } else if (language == 'xml') {
       if ('<?'.startsWith(prefixLower)) {
@@ -307,15 +290,11 @@ class CodeCompletionEngine {
         results.add(CompletionItem('flex-direction:', 'snippet', 'flex-direction: ;'));
       }
       if ('@'.startsWith(prefixLower)) {
-        results.add(CompletionItem('@media', 'snippet', '@media (max-width: ) {
-    
-}'));
+        results.add(CompletionItem('@media', 'snippet', '@media (max-width: ) {\n    \n}'));
       }
     } else if (language == 'json') {
       if ('{'.startsWith(prefixLower)) {
-        results.add(CompletionItem('{ }', 'snippet', '{
-    
-}'));
+        results.add(CompletionItem('{ }', 'snippet', '{\n    \n}'));
       }
     } else if (language == 'yaml') {
       if ('ap'.startsWith(prefixLower)) {
@@ -325,8 +304,7 @@ class CodeCompletionEngine {
         results.add(CompletionItem('kind:', 'snippet', 'kind: '));
       }
       if ('me'.startsWith(prefixLower)) {
-        results.add(CompletionItem('metadata:', 'snippet', 'metadata:
-  name: '));
+        results.add(CompletionItem('metadata:', 'snippet', 'metadata:\n  name: '));
       }
     } else if (language == 'markdown') {
       if ('#'.startsWith(prefixLower)) {
@@ -336,9 +314,7 @@ class CodeCompletionEngine {
         results.add(CompletionItem('## heading', 'snippet', '## '));
       }
       if ('```'.startsWith(prefixLower)) {
-        results.add(CompletionItem('```code', 'snippet', '```
-
-```'));
+        results.add(CompletionItem('```code', 'snippet', '```\n\n```'));
       }
       if ('['.startsWith(prefixLower)) {
         results.add(CompletionItem('[link]', 'snippet', '[]()'));

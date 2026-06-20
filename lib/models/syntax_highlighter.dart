@@ -483,11 +483,11 @@ class SyntaxHighlighterEngine {
   static List<Token> _tokenizeMarkup(String line, String language) {
     final tokens = <Token>[];
     final regex = RegExp(
-      r'(</?[a-zA-Z][\w-]*)|(\s+[a-zA-Z][\w-]*)\s*=|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(<!--[\s\S]*?-->)',
+      r"(</?[a-zA-Z][\w-]*)|(\s+[a-zA-Z][\w-]*)\s*=|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(<!--[\s\S]*?-->)",
     );
     // 注：简化版，主要区分标签、属性、属性值、注释
     final fullRegex = RegExp(
-      r'(</?[a-zA-Z][\w.-]*>?)|(\b[a-zA-Z][\w-]*)\s*(?==)|("[^"]*"|'[^']*')|(<!--[\s\S]*?-->)|([^<]+)',
+      r"(</?[a-zA-Z][\w.-]*>?)|(\b[a-zA-Z][\w-]*)\s*(?==)|("[^"]*"|'[^']*')|(<!--[\s\S]*?-->)|([^<]+)",
     );
     int lastEnd = 0;
     for (final match in fullRegex.allMatches(line)) {
@@ -527,7 +527,7 @@ class SyntaxHighlighterEngine {
     final regex = RegExp(
       r'(@[a-zA-Z-]+)|([.#]?[a-zA-Z][\w-]*(?=\s*\{))|([a-zA-Z-]+(?=\s*:))|'
       r'([a-fA-F0-9]{3,8}|\b\d+\.?\d*(?:px|em|rem|%|vw|vh|s|ms|deg)?\b)|'
-      r'(\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|([{}():;,])|(\s+)',
+      r"(\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|([{}():;,])|(\s+)",
     );
     int lastEnd = 0;
     for (final match in regex.allMatches(line)) {
@@ -607,7 +607,7 @@ class SyntaxHighlighterEngine {
       r'(\btrue\b|\bfalse\b|\b\b|\byes\b|\bno\b|\bon\b|\boff\b)|'
       r'(-?\b\d+\.?\d*(?:[eE][+-]?\d+)?\b)|'
       r'(#.*$)|'
-      r'("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|'
+      r"("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|"
       r'(:\s+|\s+-\s)|'
       r'(\d{4}-\d{2}-\d{2})|'
       r'(\S+)',

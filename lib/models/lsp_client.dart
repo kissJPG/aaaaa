@@ -115,7 +115,7 @@ class LspClient {
       'position': {'line': line, 'character': character},
       'context': {'triggerKind': 1}, // Invoked
     });
-    if (result == null || result['items'] == null) return null;
+    if (result == null || result['items'] == null) return const <String, dynamic>{};
 
     final List items = result['items'] is List ? result['items'] : [];
     return items.map((item) {
@@ -203,7 +203,7 @@ class LspClient {
 
   Future<Map<String, dynamic>?> _sendRequest(
       String method, Map<String, dynamic> params) async {
-    if (_process == null) return null;
+    if (_process == null) return const <String, dynamic>{};
     final id = ++_idCounter;
     final body = jsonEncode({
       'jsonrpc': '2.0',
@@ -221,7 +221,7 @@ class LspClient {
       const Duration(seconds: 5),
       onTimeout: () {
         _pending.remove(id);
-        return null;
+        return const <String, dynamic>{};
       },
     );
   }

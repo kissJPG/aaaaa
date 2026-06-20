@@ -166,4 +166,30 @@ class EditorState extends ChangeNotifier {
   void _checkModified() {
     _isModified = _text != _savedText;
   }
+
+  // ===== 兼容调用方命名 =====
+  String? get openedFilePath => _filePath.isEmpty ? null : _filePath;
+  set openedFilePath(String? path) {
+    _filePath = path ?? '';
+    notifyListeners();
+  }
+  String get currentLanguage => language;
+  int get lineCount {
+    if (_text.isEmpty) return 1;
+    return '\n'.allMatches(_text).length + 1;
+  }
+  void setLanguage(String lang) {
+    // 语言由文件扩展名自动检测，此方法用于手动覆盖
+    notifyListeners();
+  }
+  void markModified() {
+    _isModified = true;
+    notifyListeners();
+  }
+  void clearUndoHistory() {
+    _undoStack.clear();
+    _redoStack.clear();
+  }
+
+
 }

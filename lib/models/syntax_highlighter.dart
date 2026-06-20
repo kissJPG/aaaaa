@@ -262,4 +262,15 @@ class SyntaxHighlighterEngine {
     TokenType.decorator: Color(0xFFC586C0),
     TokenType.normal: Color(0xFFD4D4D4),
   };
+
+  /// 实例方法版 tokenize：对多行文本的指定行进行词法分析
+  List<Token> tokenize(String line, String language) {
+    return SyntaxHighlighterEngine.tokenizeLine(line, language);
+  }
+  /// 实例方法版 tokenColor：根据 Token 类型返回颜色
+  Color tokenColor(Token token, bool isDark) {
+    return SyntaxHighlighterEngine.colorForToken(token.type, isDark: isDark);
+  }
+
+
 }

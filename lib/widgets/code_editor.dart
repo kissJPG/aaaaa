@@ -38,10 +38,18 @@ class _CodeEditorState extends State<CodeEditor> {
     super.initState();
     final state = context.read<EditorState>();
     _textController = TextEditingController(text: state.text);
+    // 监听滚动偏移，用于在外部修改光标位置时触发的滚动
+    _scrollController.addListener(_onScrollChanged);
+  }
+
+  void _onScrollChanged() {
+    // 如果 TextField 使用了同一个 scrollController，则无需额外同步
+    // 此处保留用于未来扩展（如手势滑动光标时的动画反馈）
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
     _focusNode.dispose();
     _textController.dispose();
@@ -136,8 +144,25 @@ class _CodeEditorState extends State<CodeEditor> {
                     Expanded(
                       child: SingleChildScrollView(
                         controller: _scrollController,
+                        physics: const ClampingScrollPhysics(),
                         child: GestureDetector(
                           onTap: () => _focusNode.requestFocus(),
+                          onHorizontalDragUpdate: (details) {
+                            // 水平滑动微调光标位置
+                            final currentOffset = _textController.selection.baseOffset;
+                            final text = _textController.text;
+                            int newOffset = currentOffset;
+                            // 根据滑动方向移动光标
+                            if (details.delta.dx > 0 && currentOffset < text.length) {
+                              newOffset = currentOffset + 1;
+                            } else if (details.delta.dx < 0 && currentOffset > 0) {
+                              newOffset = currentOffset - 1;
+                            }
+                            if (newOffset != currentOffset) {
+                              _textController.selection = TextSelection.collapsed(offset: newOffset);
+                              context.read<EditorState>().setCursorOffset(newOffset);
+                            }
+                          },
                           child: RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -166,6 +191,8 @@ class _CodeEditorState extends State<CodeEditor> {
           child: TextField(
             controller: _textController,
             focusNode: _focusNode,
+            scrollController: _scrollController,
+            scrollPhysics: const ClampingScrollPhysics(),
             maxLines: null,
             expands: true,
             keyboardType: TextInputType.multiline,

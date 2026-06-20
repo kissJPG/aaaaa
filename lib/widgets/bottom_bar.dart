@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/editor_state.dart';
+import '../models/lsp_manager.dart';
 
 class BottomBar extends StatelessWidget {
   final VoidCallback? onOpenFile;
@@ -222,6 +223,7 @@ class _LanguageChip extends StatelessWidget {
     final langs = <String, String>{
       'python': 'Python',
       'javascript': 'JavaScript',
+      'typescript': 'TypeScript',
       'java': 'Java',
       'dart': 'Dart',
       'rust': 'Rust',
@@ -229,9 +231,15 @@ class _LanguageChip extends StatelessWidget {
       'swift': 'Swift',
       'go': 'Go',
       'ruby': 'Ruby',
+      'c': 'C',
+      'cpp': 'C++',
       'html': 'HTML',
+      'xml': 'XML',
       'css': 'CSS',
       'json': 'JSON',
+      'yaml': 'YAML',
+      'markdown': 'Markdown',
+      'sql': 'SQL',
       'plaintext': '纯文本',
     };
 
@@ -293,6 +301,84 @@ class _LanguageChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// LSP 状态指示器
+class _LspStatusIndicator extends StatefulWidget {
+  final bool isDark;
+  const _LspStatusIndicator({required this.isDark});
+
+  @override
+  State<_LspStatusIndicator> createState() => _LspStatusIndicatorState();
+}
+
+class _LspStatusIndicatorState extends State<_LspStatusIndicator> {
+  LspServerStatus _status = LspServerStatus.notInstalled;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  void _checkStatus() {
+    final manager = LspManager();
+    final currentLang = '';
+    final servers = manager.getServersForLanguage(currentLang);
+    final running = servers.any((s) => s.status == LspServerStatus.running);
+    final installed = servers.any((s) => s.status == LspServerStatus.installed);
+    setState(() {
+      if (running) {
+        _status = LspServerStatus.running;
+      } else if (installed) {
+        _status = LspServerStatus.installed;
+      } else {
+        _status = LspServerStatus.notInstalled;
+      }
+    });
+  }
+
+  Color _dotColor() {
+    switch (_status) {
+      case LspServerStatus.running:
+        return const Color(0xFF4EC9B0); // 绿色
+      case LspServerStatus.installed:
+        return const Color(0xFFFFCC00); // 黄色
+      case LspServerStatus.downloading:
+        return const Color(0xFF569CD6); // 蓝色
+      default:
+        return widget.isDark ? Colors.white30 : Colors.black26; // 灰色
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _checkStatus(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _dotColor(),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'LSP',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: widget.isDark ? Colors.white38 : Colors.black38,
+            ),
+          ),
+        ],
       ),
     );
   }

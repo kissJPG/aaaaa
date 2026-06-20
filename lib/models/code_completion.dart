@@ -214,6 +214,135 @@ class CodeCompletionEngine {
         results.add(CompletionItem(
             'match', 'snippet', 'match value {\n    Some(x) => x,\n    None => return,\n}'));
       }
+    } else if (language == 'html') {
+      if ('<!'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<!DOCTYPE>', 'snippet', '<!DOCTYPE html>'));
+      }
+      if ('<h'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<html>', 'snippet', '<html>
+<head>
+    <title></title>
+</head>
+<body>
+    
+</body>
+</html>'));
+      }
+      if ('<d'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<div>', 'snippet', '<div class="">
+    
+</div>'));
+      }
+      if ('<s'.startsWith(prefixLower) && !'<script'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<span>', 'snippet', '<span></span>'));
+      }
+      if ('<p'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<p>', 'snippet', '<p></p>'));
+      }
+      if ('<a'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<a>', 'snippet', '<a href=""></a>'));
+      }
+      if ('<i'.startsWith(prefixLower) && !'<img'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<img>', 'snippet', '<img src="" alt="" />'));
+      }
+      if ('<ul'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<ul>', 'snippet', '<ul>
+    <li></li>
+</ul>'));
+      }
+      if ('<fo'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<form>', 'snippet', '<form action="" method="">
+    
+</form>'));
+      }
+      if ('<in'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<input>', 'snippet', '<input type="" />'));
+      }
+      if ('<bu'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<button>', 'snippet', '<button></button>'));
+      }
+      if ('<tab'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<table>', 'snippet', '<table>
+    <tr>
+        <td></td>
+    </tr>
+</table>'));
+      }
+    } else if (language == 'xml') {
+      if ('<?'.startsWith(prefixLower)) {
+        results.add(CompletionItem('<?xml?>', 'snippet', '<?xml version="1.0" encoding="UTF-8"?>'));
+      }
+    } else if (language == 'css') {
+      if ('cor'.startsWith(prefixLower)) {
+        results.add(CompletionItem('color:', 'snippet', 'color: ;'));
+      }
+      if ('ba'.startsWith(prefixLower)) {
+        results.add(CompletionItem('background:', 'snippet', 'background: ;'));
+      }
+      if ('di'.startsWith(prefixLower)) {
+        results.add(CompletionItem('display:', 'snippet', 'display: ;'));
+      }
+      if ('fo'.startsWith(prefixLower)) {
+        results.add(CompletionItem('font-size:', 'snippet', 'font-size: ;'));
+      }
+      if ('mar'.startsWith(prefixLower)) {
+        results.add(CompletionItem('margin:', 'snippet', 'margin: ;'));
+      }
+      if ('pad'.startsWith(prefixLower)) {
+        results.add(CompletionItem('padding:', 'snippet', 'padding: ;'));
+      }
+      if ('wid'.startsWith(prefixLower)) {
+        results.add(CompletionItem('width:', 'snippet', 'width: ;'));
+      }
+      if ('hei'.startsWith(prefixLower)) {
+        results.add(CompletionItem('height:', 'snippet', 'height: ;'));
+      }
+      if ('bor'.startsWith(prefixLower)) {
+        results.add(CompletionItem('border:', 'snippet', 'border: ;'));
+      }
+      if ('pos'.startsWith(prefixLower)) {
+        results.add(CompletionItem('position:', 'snippet', 'position: ;'));
+      }
+      if ('flex'.startsWith(prefixLower)) {
+        results.add(CompletionItem('flex-direction:', 'snippet', 'flex-direction: ;'));
+      }
+      if ('@'.startsWith(prefixLower)) {
+        results.add(CompletionItem('@media', 'snippet', '@media (max-width: ) {
+    
+}'));
+      }
+    } else if (language == 'json') {
+      if ('{'.startsWith(prefixLower)) {
+        results.add(CompletionItem('{ }', 'snippet', '{
+    
+}'));
+      }
+    } else if (language == 'yaml') {
+      if ('ap'.startsWith(prefixLower)) {
+        results.add(CompletionItem('apiVersion:', 'snippet', 'apiVersion: '));
+      }
+      if ('ki'.startsWith(prefixLower)) {
+        results.add(CompletionItem('kind:', 'snippet', 'kind: '));
+      }
+      if ('me'.startsWith(prefixLower)) {
+        results.add(CompletionItem('metadata:', 'snippet', 'metadata:
+  name: '));
+      }
+    } else if (language == 'markdown') {
+      if ('#'.startsWith(prefixLower)) {
+        results.add(CompletionItem('# heading', 'snippet', '# '));
+      }
+      if ('##'.startsWith(prefixLower)) {
+        results.add(CompletionItem('## heading', 'snippet', '## '));
+      }
+      if ('```'.startsWith(prefixLower)) {
+        results.add(CompletionItem('```code', 'snippet', '```
+
+```'));
+      }
+      if ('['.startsWith(prefixLower)) {
+        results.add(CompletionItem('[link]', 'snippet', '[]()'));
+      }
     }
   }
 

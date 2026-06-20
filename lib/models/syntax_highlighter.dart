@@ -11,6 +11,8 @@ enum TokenType {
   builtin,
   decorator,
   type,
+  tag,
+  attribute,
   normal,
 }
 
@@ -143,6 +145,41 @@ class SyntaxHighlighterEngine {
       'switch', 'throw', 'throws', 'true', 'try', 'typealias', 'var',
       'where', 'while',
     ],
+    'html': const [
+      'html', 'head', 'body', 'title', 'meta', 'link', 'script', 'style',
+      'div', 'span', 'p', 'a', 'img', 'ul', 'ol', 'li', 'table', 'tr',
+      'td', 'th', 'thead', 'tbody', 'tfoot', 'form', 'input', 'button',
+      'select', 'option', 'textarea', 'label', 'fieldset', 'legend',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'footer', 'nav',
+      'section', 'article', 'aside', 'main', 'figure', 'figcaption',
+      'blockquote', 'pre', 'code', 'em', 'strong', 'br', 'hr',
+      'iframe', 'canvas', 'svg', 'video', 'audio', 'source',
+    ],
+    'xml': const [
+      'xml', 'version', 'encoding', 'standalone',
+    ],
+    'css': const [
+      'color', 'background', 'font', 'margin', 'padding', 'border',
+      'display', 'position', 'width', 'height', 'top', 'left', 'right',
+      'bottom', 'float', 'clear', 'overflow', 'z-index', 'opacity',
+      'text-align', 'text-decoration', 'font-size', 'font-weight',
+      'font-family', 'line-height', 'letter-spacing', 'white-space',
+      'flex', 'flex-direction', 'justify-content', 'align-items',
+      'align-self', 'flex-wrap', 'grid', 'grid-template', 'gap',
+      'transform', 'transition', 'animation', 'cursor', 'box-sizing',
+      'border-radius', 'box-shadow', 'content', 'visibility',
+      'pointer-events', 'user-select', 'resize', 'outline',
+      'min-width', 'max-width', 'min-height', 'max-height',
+      'background-color', 'background-image', 'background-size',
+      '@media', '@import', '@keyframes', '@font-face',
+    ],
+    'json': const [
+      'true', 'false', '',
+    ],
+    'yaml': const [
+      'true', 'false', '', 'yes', 'no', 'on', 'off',
+    ],
+    'markdown': const [],
   };
 
   /// 各语言内置函数/类
@@ -291,16 +328,62 @@ class SyntaxHighlighterEngine {
       'NotificationCenter', 'UserDefaults', 'FileManager',
       'UIView', 'UIViewController', 'UILabel', 'UIButton',
     ],
+    'html': const [
+      'id', 'class', 'style', 'src', 'href', 'alt', 'title', 'type',
+      'name', 'value', 'placeholder', 'disabled', 'readonly', 'checked',
+      'selected', 'required', 'maxlength', 'min', 'max', 'step',
+      'pattern', 'autocomplete', 'autofocus', 'target', 'rel',
+      'onclick', 'onchange', 'onsubmit', 'data-',
+    ],
+    'xml': const [
+      'xmlns', 'xsi', 'schemaLocation', 'noNamespaceSchemaLocation',
+    ],
+    'css': const [
+      'none', 'auto', 'inherit', 'initial', 'unset',
+      'block', 'inline', 'inline-block', 'flex', 'grid',
+      'absolute', 'relative', 'fixed', 'sticky',
+      'hidden', 'visible', 'scroll', 'solid', 'dashed', 'dotted',
+      'px', 'em', 'rem', '%', 'vw', 'vh', 'vmin', 'vmax',
+      'rgb', 'rgba', 'hsl', 'hsla', 'var', 'calc', 'min', 'max',
+      'url', 'linear-gradient', 'radial-gradient',
+    ],
+    'json': const [],
+    'yaml': const [],
+    'markdown': const [],
   };
 
   /// 将通用语言名映射到有定义的关键词表（公开方法）
   static String mapLanguage(String language) {
     if (keywords.containsKey(language)) return language;
+    // 别名映射
+    if (language == 'scss' || language == 'less' || language == 'sass') return 'css';
+    if (language == 'svg' || language == 'xaml' || language == 'plist') return 'xml';
+    if (language == 'jsonc' || language == 'geojson') return 'json';
+    if (language == 'markdown' || language == 'mdx') return 'markdown';
+    if (language == 'htm') return 'html';
+    if (language == 'yml') return 'yaml';
     return 'python';
   }
 
   /// 对一行代码进行词法分析，返回 Token 列表
   static List<Token> tokenizeLine(String line, String language) {
+    // 标记语言使用专用分词器
+    if (language == 'html' || language == 'xml') {
+      return _tokenizeMarkup(line, language);
+    }
+    if (language == 'css' || language == 'scss' || language == 'less' || language == 'sass') {
+      return _tokenizeCSS(line);
+    }
+    if (language == 'json' || language == 'jsonc' || language == 'geojson') {
+      return _tokenizeJson(line);
+    }
+    if (language == 'yaml' || language == 'yml') {
+      return _tokenizeYaml(line);
+    }
+    if (language == 'markdown' || language == 'mdx' || language == 'md') {
+      return _tokenizeMarkdown(line);
+    }
+
     final actualLang = mapLanguage(language);
     final kwSet = Set<String>.from(keywords[actualLang] ?? keywords['python']!);
     final builtinSet = Set<String>.from(
@@ -371,6 +454,8 @@ class SyntaxHighlighterEngine {
     TokenType.number: Color(0xFF098658),
     TokenType.builtin: Color(0xFF795E26),
     TokenType.type: Color(0xFF267F99),
+    TokenType.tag: Color(0xFF800000),
+    TokenType.attribute: Color(0xFF0000FF),
     TokenType.operator: Color(0xFF000000),
     TokenType.punctuation: Color(0xFF000000),
     TokenType.decorator: Color(0xFFAF00DB),
@@ -384,11 +469,226 @@ class SyntaxHighlighterEngine {
     TokenType.number: Color(0xFFB5CEA8),
     TokenType.builtin: Color(0xFFDCDCAA),
     TokenType.type: Color(0xFF4EC9B0),
+    TokenType.tag: Color(0xFF569CD6),
+    TokenType.attribute: Color(0xFF9CDCFE),
     TokenType.operator: Color(0xFFD4D4D4),
     TokenType.punctuation: Color(0xFFD4D4D4),
     TokenType.decorator: Color(0xFFC586C0),
     TokenType.normal: Color(0xFFD4D4D4),
   };
+
+  // ===== 专用分词器 =====
+
+  /// HTML/XML 标记语言分词器
+  static List<Token> _tokenizeMarkup(String line, String language) {
+    final tokens = <Token>[];
+    final regex = RegExp(
+      r'(</?[a-zA-Z][\w-]*)|(\s+[a-zA-Z][\w-]*)\s*=|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(<!--[\s\S]*?-->)',
+    );
+    // 注：简化版，主要区分标签、属性、属性值、注释
+    final fullRegex = RegExp(
+      r'(</?[a-zA-Z][\w.-]*>?)|(\b[a-zA-Z][\w-]*)\s*(?==)|("[^"]*"|'[^']*')|(<!--[\s\S]*?-->)|([^<]+)',
+    );
+    int lastEnd = 0;
+    for (final match in fullRegex.allMatches(line)) {
+      if (match.start > lastEnd) {
+        tokens.add(Token(TokenType.normal, line.substring(lastEnd, match.start)));
+      }
+      lastEnd = match.end;
+      final text = match.group(0)!;
+
+      if (match.group(1) != null) {
+        // 标签: <tagname 或 </tagname 或 />
+        tokens.add(Token(TokenType.tag, text));
+      } else if (match.group(2) != null) {
+        // 属性名
+        tokens.add(Token(TokenType.attribute, text));
+      } else if (match.group(3) != null) {
+        // 属性值（引号字符串）
+        tokens.add(Token(TokenType.string, text));
+      } else if (match.group(4) != null) {
+        // 注释
+        tokens.add(Token(TokenType.comment, text));
+      } else if (match.group(5) != null) {
+        // 普通文本内容
+        tokens.add(Token(TokenType.normal, text));
+      }
+    }
+    if (lastEnd < line.length) {
+      tokens.add(Token(TokenType.normal, line.substring(lastEnd)));
+    }
+    return tokens;
+  }
+
+  /// CSS 分词器
+  static List<Token> _tokenizeCSS(String line) {
+    final tokens = <Token>[];
+    // CSS 属性:值; @规则 选择器{} 注释
+    final regex = RegExp(
+      r'(@[a-zA-Z-]+)|([.#]?[a-zA-Z][\w-]*(?=\s*\{))|([a-zA-Z-]+(?=\s*:))|'
+      r'([a-fA-F0-9]{3,8}|\b\d+\.?\d*(?:px|em|rem|%|vw|vh|s|ms|deg)?\b)|'
+      r'(\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|([{}():;,])|(\s+)',
+    );
+    int lastEnd = 0;
+    for (final match in regex.allMatches(line)) {
+      if (match.start > lastEnd) {
+        tokens.add(Token(TokenType.normal, line.substring(lastEnd, match.start)));
+      }
+      lastEnd = match.end;
+      final text = match.group(0)!;
+
+      if (match.group(1) != null) {
+        tokens.add(Token(TokenType.decorator, text)); // @规则
+      } else if (match.group(2) != null) {
+        tokens.add(Token(TokenType.type, text)); // 选择器
+      } else if (match.group(3) != null) {
+        tokens.add(Token(TokenType.attribute, text)); // CSS属性
+      } else if (match.group(4) != null) {
+        tokens.add(Token(TokenType.number, text)); // 数值/颜色
+      } else if (match.group(5) != null) {
+        tokens.add(Token(TokenType.comment, text));
+      } else if (match.group(6) != null) {
+        tokens.add(Token(TokenType.string, text));
+      } else if (match.group(7) != null) {
+        tokens.add(Token(TokenType.punctuation, text));
+      } else if (match.group(8) != null) {
+        tokens.add(Token(TokenType.normal, text));
+      }
+    }
+    if (lastEnd < line.length) {
+      tokens.add(Token(TokenType.normal, line.substring(lastEnd)));
+    }
+    return tokens;
+  }
+
+  /// JSON 分词器
+  static List<Token> _tokenizeJson(String line) {
+    final tokens = <Token>[];
+    final regex = RegExp(
+      r'("(?:[^"\\]|\\.)*")\s*:|("(?:[^"\\]|\\.)*")|'
+      r'(\btrue\b|\bfalse\b|\b\b)|'
+      r'(-?\b\d+\.?\d*(?:[eE][+-]?\d+)?\b)|([{}()\[\],:])|(\s+)',
+    );
+    int lastEnd = 0;
+    for (final match in regex.allMatches(line)) {
+      if (match.start > lastEnd) {
+        tokens.add(Token(TokenType.normal, line.substring(lastEnd, match.start)));
+      }
+      lastEnd = match.end;
+      final text = match.group(0)!;
+
+      if (match.group(1) != null) {
+        // key: 带冒号的键
+        tokens.add(Token(TokenType.attribute, text));
+      } else if (match.group(2) != null) {
+        tokens.add(Token(TokenType.string, text));
+      } else if (match.group(3) != null) {
+        tokens.add(Token(TokenType.keyword, text));
+      } else if (match.group(4) != null) {
+        tokens.add(Token(TokenType.number, text));
+      } else if (match.group(5) != null) {
+        tokens.add(Token(TokenType.punctuation, text));
+      } else if (match.group(6) != null) {
+        tokens.add(Token(TokenType.normal, text));
+      }
+    }
+    if (lastEnd < line.length) {
+      tokens.add(Token(TokenType.normal, line.substring(lastEnd)));
+    }
+    return tokens;
+  }
+
+  /// YAML 分词器
+  static List<Token> _tokenizeYaml(String line) {
+    final tokens = <Token>[];
+    // YAML: key: value, - 列表项, # 注释, | 多行字符串
+    final regex = RegExp(
+      r'(^[a-zA-Z_][\w.-]*)\s*:(?=\s|$)|'
+      r'(\btrue\b|\bfalse\b|\b\b|\byes\b|\bno\b|\bon\b|\boff\b)|'
+      r'(-?\b\d+\.?\d*(?:[eE][+-]?\d+)?\b)|'
+      r'(#.*$)|'
+      r'("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|'
+      r'(:\s+|\s+-\s)|'
+      r'(\d{4}-\d{2}-\d{2})|'
+      r'(\S+)',
+    );
+    int lastEnd = 0;
+    for (final match in regex.allMatches(line)) {
+      if (match.start > lastEnd) {
+        tokens.add(Token(TokenType.normal, line.substring(lastEnd, match.start)));
+      }
+      lastEnd = match.end;
+      final text = match.group(0)!;
+
+      if (match.group(1) != null) {
+        tokens.add(Token(TokenType.attribute, text)); // key:
+      } else if (match.group(2) != null) {
+        tokens.add(Token(TokenType.keyword, text));
+      } else if (match.group(3) != null) {
+        tokens.add(Token(TokenType.number, text));
+      } else if (match.group(4) != null) {
+        tokens.add(Token(TokenType.comment, text));
+      } else if (match.group(5) != null) {
+        tokens.add(Token(TokenType.string, text));
+      } else if (match.group(6) != null) {
+        tokens.add(Token(TokenType.punctuation, text));
+      } else if (match.group(7) != null) {
+        tokens.add(Token(TokenType.number, text)); // 日期
+      } else if (match.group(8) != null) {
+        tokens.add(Token(TokenType.normal, text));
+      }
+    }
+    if (lastEnd < line.length) {
+      tokens.add(Token(TokenType.normal, line.substring(lastEnd)));
+    }
+    return tokens;
+  }
+
+  /// Markdown 分词器
+  static List<Token> _tokenizeMarkdown(String line) {
+    final tokens = <Token>[];
+    // Markdown: # 标题, **粗体**, *斜体*, `代码`, [链接](url), 普通文本
+    final regex = RegExp(
+      r'(^#{1,6}\s+[^\n]+)|'
+      r'(\*\*[^*]+\*\*)|'
+      r'(\*[^*]+\*|_[^_]+_)|'
+      r'(`[^`]+`)|'
+      r'(\[[^\]]+\]\([^)]+\))|'
+      r'(^>\s.*)|'
+      r'(^\s*[-*+]\s)|'
+      r'(\S+)',
+    );
+    int lastEnd = 0;
+    for (final match in regex.allMatches(line)) {
+      if (match.start > lastEnd) {
+        tokens.add(Token(TokenType.normal, line.substring(lastEnd, match.start)));
+      }
+      lastEnd = match.end;
+      final text = match.group(0)!;
+
+      if (match.group(1) != null) {
+        tokens.add(Token(TokenType.keyword, text)); // 标题 #
+      } else if (match.group(2) != null) {
+        tokens.add(Token(TokenType.builtin, text)); // 粗体 **
+      } else if (match.group(3) != null) {
+        tokens.add(Token(TokenType.type, text)); // 斜体 *
+      } else if (match.group(4) != null) {
+        tokens.add(Token(TokenType.string, text)); // 行内代码 `
+      } else if (match.group(5) != null) {
+        tokens.add(Token(TokenType.attribute, text)); // [链接]()
+      } else if (match.group(6) != null) {
+        tokens.add(Token(TokenType.comment, text)); // 引用 >
+      } else if (match.group(7) != null) {
+        tokens.add(Token(TokenType.punctuation, text)); // 列表项
+      } else if (match.group(8) != null) {
+        tokens.add(Token(TokenType.normal, text));
+      }
+    }
+    if (lastEnd < line.length) {
+      tokens.add(Token(TokenType.normal, line.substring(lastEnd)));
+    }
+    return tokens;
+  }
 
   /// 实例方法版 tokenize：对多行文本的指定行进行词法分析
   List<Token> tokenize(String line, String language) {

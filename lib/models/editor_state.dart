@@ -9,6 +9,7 @@ class EditorState extends ChangeNotifier {
   bool _showLineNumbers = true;
   double _fontSize = 14.0;
   bool _isModified = false;
+  int _cursorOffset = 0;
 
   // 撤销/重做栈
   final List<String> _undoStack = [];
@@ -21,6 +22,7 @@ class EditorState extends ChangeNotifier {
   bool get showLineNumbers => _showLineNumbers;
   double get fontSize => _fontSize;
   bool get isModified => _isModified;
+  int get cursorOffset => _cursorOffset;
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 
@@ -48,10 +50,21 @@ class EditorState extends ChangeNotifier {
     if (name.endsWith('.rb')) return 'ruby';
     if (name.endsWith('.kt') || name.endsWith('.kts')) return 'kotlin';
     if (name.endsWith('.swift')) return 'swift';
-    if (name.endsWith('.html') || name.endsWith('.xml') ||
-        name.endsWith('.css') || name.endsWith('.json') ||
-        name.endsWith('.yaml') || name.endsWith('.yml') ||
-        name.endsWith('.md')) return 'javascript';
+    // HTML / XML 系列
+    if (name.endsWith('.html') || name.endsWith('.htm')) return 'html';
+    if (name.endsWith('.xml') || name.endsWith('.svg') ||
+        name.endsWith('.xaml') || name.endsWith('.plist')) return 'xml';
+    // CSS 系列
+    if (name.endsWith('.css') || name.endsWith('.scss') ||
+        name.endsWith('.less') || name.endsWith('.sass')) return 'css';
+    // JSON 系列
+    if (name.endsWith('.json') || name.endsWith('.jsonc') ||
+        name.endsWith('.geojson')) return 'json';
+    // YAML 系列
+    if (name.endsWith('.yaml') || name.endsWith('.yml')) return 'yaml';
+    // Markdown 系列
+    if (name.endsWith('.md') || name.endsWith('.mdx') ||
+        name.endsWith('.markdown')) return 'markdown';
     // 内容检测作为后备
     return _detectLanguageFromContent(_text);
   }
@@ -59,6 +72,18 @@ class EditorState extends ChangeNotifier {
   /// 从文件内容检测语言
   String _detectLanguageFromContent(String code) {
     if (code.isEmpty) return 'python';
+    // HTML 检测（优先，因为 HTML 通常有独特的标签结构）
+    if (RegExp(r'<!DOCTYPE\s+html|<html\b|<body\b|<head\b|<div\b|<span\b',
+            multiLine: true, caseSensitive: false)
+        .hasMatch(code)) {
+      return 'html';
+    }
+    // XML 检测
+    if (RegExp(r'<\?xml\s+version|<\w+\s+xmlns[:=]|<plist\s+version',
+            multiLine: true, caseSensitive: false)
+        .hasMatch(code)) {
+      return 'xml';
+    }
     if (RegExp(r'^\s*(def\s|class\s+\w+\s*[:\(]|import\s+\w+|from\s+\w+\s+import)',
             multiLine: true)
         .hasMatch(code)) {
@@ -181,6 +206,10 @@ class EditorState extends ChangeNotifier {
   void setLanguage(String lang) {
     // 语言由文件扩展名自动检测，此方法用于手动覆盖
     notifyListeners();
+  }
+  void setCursorOffset(int offset) {
+    _cursorOffset = offset;
+    // 不触发 notifyListeners，避免不必要的 UI 重建
   }
   void markModified() {
     _isModified = true;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'models/editor_state.dart';
+import 'models/lsp_manager.dart';
 import 'models/file_io.dart';
 import 'widgets/code_editor.dart';
 import 'widgets/bottom_bar.dart';
@@ -20,6 +21,13 @@ class CodeEditorApp extends StatefulWidget {
 
 class _CodeEditorAppState extends State<CodeEditorApp> {
   bool _isDarkMode = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // 初始化 LSP 管理器，扫描已安装服务器
+    LspManager().scanInstalled();
+  }
 
   void _toggleTheme() {
     setState(() {

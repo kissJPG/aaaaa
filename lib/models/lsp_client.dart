@@ -115,7 +115,7 @@ class LspClient {
       'position': {'line': line, 'character': character},
       'context': {'triggerKind': 1}, // Invoked
     });
-    if (result == null || result['items'] == null) return const <String, dynamic>{};
+    if (result == null || result['items'] == null) return null;
 
     final List items = result['items'] is List ? result['items'] : [];
     return items.map((item) {
